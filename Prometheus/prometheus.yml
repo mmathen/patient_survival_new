@@ -21,7 +21,7 @@ scrape_configs:
 
   - job_name: "patient_survival_model_api-app"
     metrics_path: '/metrics'
-    scheme: 'http'
+    scheme: 'https'
     scrape_interval: 10s       # override default value
     scrape_timeout: 10s       # override default value
     static_configs:
