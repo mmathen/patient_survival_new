@@ -22,6 +22,36 @@ from patient_survival_model.predict import make_prediction
 app = FastAPI(
     #title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+################################# Prometheus related code START ######################################################
+import prometheus_client as prom
+
+from sklearn.metrics import r2_score
+
+# Metric object of type gauge
+r2_metric = prom.Gauge('patient_survival_r2_score', 'R2 score for random 100 test samples')
+
+
+# LOAD TEST DATA
+test_data = pd.read_csv(curr_path + "/heart_failure_clinical_records_dataset.csv")
+
+
+# Function for updating metrics
+def update_metrics():
+    test = test_data.sample(100)
+    test_feat = test.drop('cnt', axis=1)
+    test_cnt = test['cnt'].values
+    test_pred = make_prediction(input_data=test_feat)['predictions']
+    r2 = r2_score(test_cnt, test_pred).round(3)
+    
+    r2_metric.set(r2)
+
+
+@app.get("/metrics")
+async def get_metrics():
+    update_metrics()
+    return Response(media_type="text/plain", content= prom.generate_latest())
+
+################################# Prometheus related code END ######################################################
 
 # root_router = APIRouter()
 
